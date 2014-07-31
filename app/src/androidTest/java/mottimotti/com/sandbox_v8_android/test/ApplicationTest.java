@@ -2,7 +2,7 @@ package mottimotti.com.sandbox_v8_android.test;
 
 import android.app.Application;
 import android.test.ActivityInstrumentationTestCase2;
-import android.test.mock.MockApplication;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
@@ -36,6 +36,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
     public void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.initMocks(this);
+        Log.d("TEST777", "=============================================1");
 
         String mockJson = TestUtils.getJson("facebook_page");
         FacebookPage page = new Gson().fromJson(mockJson, FacebookPage.class);
@@ -43,11 +44,14 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
 
         Application application = (Application) this.getInstrumentation()
                 .getTargetContext().getApplicationContext();
-//        Application application = getActivity().getApplication();
         RoboGuice.setBaseApplicationInjector(application,
                 RoboGuice.DEFAULT_STAGE,
                 Modules.override(RoboGuice.newDefaultRoboModule(application))
                         .with(new MyTestModule()));
+//        Log.d("TEST777", "In test application: " + application);
+//        Log.d("TEST777", "In test BaseApplicationInjector: " + RoboGuice.getBaseApplicationInjector(application));
+//        Log.d("TEST777", "In test injector: " + RoboGuice.getInjector(application));
+
         getActivity();
     }
 

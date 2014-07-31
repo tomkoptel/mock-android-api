@@ -1,6 +1,5 @@
 package mottimotti.com.sandbox_v8_android.network;
 
-import com.google.common.base.Supplier;
 import com.google.inject.Inject;
 
 import mottimotti.com.sandbox_v8_android.functional.MySupplier;
