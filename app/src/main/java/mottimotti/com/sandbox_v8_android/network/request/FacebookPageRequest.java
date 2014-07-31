@@ -26,9 +26,19 @@ public class FacebookPageRequest extends SpiceRequest<FacebookPage> {
 
     @AfterInject
     void injectRoboGuiceDependencies() {
+        // This makes test to work :)
         RoboInjector injector_ = RoboGuice.getInjector(context);
         wrapper = injector_.getInstance(RestClientWrapper.class);
-        RoboGuice.injectMembers(context, this);
+
+
+        // http://musingsofaprogrammingaddict.blogspot.com/2009/01/guice-tutorial-part-2-method.html
+        // Note the use of Injector.injectMembers() which allows for injection of dependencies into objects,
+        // which are not instantiated under the reign of Guice, as it is the case with JUnit test classes.
+        // With this setup test is not working.
+//        RoboGuice.injectMembers(context, this);
+
+
+
 //        Log.d("TEST777", "In test application: " + context.getApplicationContext());
 //        Log.d("TEST777", "In test BaseApplicationInjector: " + RoboGuice.getBaseApplicationInjector((Application) context.getApplicationContext()).hashCode());
 //        Log.d("TEST777", "In app injector: " + RoboGuice.getInjector(context));
