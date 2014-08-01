@@ -13,7 +13,7 @@ import org.mockito.MockitoAnnotations;
 
 import mottimotti.com.sandbox_v8_android.MyActivity_;
 import mottimotti.com.sandbox_v8_android.R;
-import mottimotti.com.sandbox_v8_android.network.RestClientWrapper;
+import mottimotti.com.sandbox_v8_android.network.request.FacebookPageRestClient;
 import mottimotti.com.sandbox_v8_android.network.response.FacebookPage;
 import roboguice.RoboGuice;
 
@@ -22,11 +22,12 @@ import static com.google.android.apps.common.testing.ui.espresso.action.ViewActi
 import static com.google.android.apps.common.testing.ui.espresso.assertion.ViewAssertions.matches;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withId;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withText;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity_> {
     @Mock
-    RestClientWrapper mockRequest;
+    FacebookPageRestClient mockRestClient;
 
     public ApplicationTest() {
         super(MyActivity_.class);
@@ -37,10 +38,6 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
         super.setUp();
         MockitoAnnotations.initMocks(this);
         Log.d("TEST777", "=============================================1");
-
-        String mockJson = TestUtils.getJson("facebook_page");
-        FacebookPage page = new Gson().fromJson(mockJson, FacebookPage.class);
-        when(mockRequest.loadDataFromNetwork()).thenReturn(page);
 
         Application application = (Application) this.getInstrumentation()
                 .getTargetContext().getApplicationContext();
@@ -61,8 +58,11 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
         RoboGuice.util.reset();
     }
 
-
     public void testInjectionOverride() {
+        String mockJson = TestUtils.getJson("facebook_page");
+        FacebookPage page = new Gson().fromJson(mockJson, FacebookPage.class);
+        when(mockRestClient.getPage(anyString())).thenReturn(page);
+
         onView(withId(R.id.testLambda)).perform(click());
         onView(withId(R.id.preview)).check(matches(withText("about")));
     }
@@ -70,7 +70,7 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
     public class MyTestModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(RestClientWrapper.class).toInstance(mockRequest);
+            bind(FacebookPageRestClient.class).toInstance(mockRestClient);
         }
     }
 }

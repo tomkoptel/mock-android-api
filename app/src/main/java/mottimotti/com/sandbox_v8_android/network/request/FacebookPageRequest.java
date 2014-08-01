@@ -10,7 +10,6 @@ import org.androidannotations.annotations.EBean;
 import org.androidannotations.annotations.RootContext;
 import org.androidannotations.annotations.rest.RestService;
 
-import mottimotti.com.sandbox_v8_android.network.RestClientWrapper;
 import mottimotti.com.sandbox_v8_android.network.response.FacebookPage;
 import roboguice.RoboGuice;
 import roboguice.inject.RoboInjector;
@@ -19,17 +18,17 @@ import roboguice.inject.RoboInjector;
 public class FacebookPageRequest extends SpiceRequest<FacebookPage> {
     @RootContext
     Context context;
+    @Inject
     @RestService
     FacebookPageRestClient restClient;
-    @Inject
-    RestClientWrapper<FacebookPage> wrapper;
+
+    private CharSequence mPageName;
 
     @AfterInject
     void injectRoboGuiceDependencies() {
         // This makes test to work :)
         RoboInjector injector_ = RoboGuice.getInjector(context);
-        wrapper = injector_.getInstance(RestClientWrapper.class);
-
+        restClient = injector_.getInstance(FacebookPageRestClient.class);
 
         // http://musingsofaprogrammingaddict.blogspot.com/2009/01/guice-tutorial-part-2-method.html
         // Note the use of Injector.injectMembers() which allows for injection of dependencies into objects,
@@ -49,11 +48,11 @@ public class FacebookPageRequest extends SpiceRequest<FacebookPage> {
     }
 
     public void setPageName(CharSequence pageName) {
-        wrapper.wrapNetworkCall(() -> restClient.getPage(pageName));
+        mPageName = pageName;
     }
 
     @Override
     public FacebookPage loadDataFromNetwork() throws Exception {
-        return wrapper.loadDataFromNetwork();
+        return restClient.getPage(mPageName);
     }
 }
