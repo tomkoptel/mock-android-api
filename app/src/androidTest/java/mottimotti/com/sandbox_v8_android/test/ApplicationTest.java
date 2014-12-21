@@ -1,76 +1,95 @@
 package mottimotti.com.sandbox_v8_android.test;
 
 import android.app.Application;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 import android.test.ActivityInstrumentationTestCase2;
-import android.util.Log;
 
-import com.google.gson.Gson;
 import com.google.inject.AbstractModule;
-import com.google.inject.util.Modules;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
 
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.io.IOException;
 
 import mottimotti.com.sandbox_v8_android.MyActivity_;
 import mottimotti.com.sandbox_v8_android.R;
-import mottimotti.com.sandbox_v8_android.network.request.FacebookPageRestClient;
-import mottimotti.com.sandbox_v8_android.network.response.FacebookPage;
+import retrofit.RestAdapter;
 import roboguice.RoboGuice;
 
-import static com.google.android.apps.common.testing.ui.espresso.Espresso.onView;
-import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.click;
-import static com.google.android.apps.common.testing.ui.espresso.assertion.ViewAssertions.matches;
-import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withId;
-import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withText;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
+@RunWith(AndroidJUnit4.class)
 public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity_> {
-    @Mock
-    FacebookPageRestClient mockRestClient;
+
+    private Application mApplication;
 
     public ApplicationTest() {
         super(MyActivity_.class);
     }
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         super.setUp();
-        MockitoAnnotations.initMocks(this);
-        Log.d("TEST777", "=============================================1");
+        injectInstrumentation(InstrumentationRegistry.getInstrumentation());
 
-        Application application = (Application) this.getInstrumentation()
+        mApplication = (Application) this.getInstrumentation()
                 .getTargetContext().getApplicationContext();
-        RoboGuice.setBaseApplicationInjector(application,
-                RoboGuice.DEFAULT_STAGE,
-                Modules.override(RoboGuice.newDefaultRoboModule(application))
-                        .with(new MyTestModule()));
-//        Log.d("TEST777", "In test application: " + application);
-//        Log.d("TEST777", "In test BaseApplicationInjector: " + RoboGuice.getBaseApplicationInjector(application));
-//        Log.d("TEST777", "In test injector: " + RoboGuice.getInjector(application));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+        RoboGuice.Util.reset();
+    }
+
+    @Test
+    public void checkPreconditions() {
+        assertThat(getActivity(), notNullValue());
+        // Check that Instrumentation was correctly injected in setUp()
+        assertThat(getInstrumentation(), notNullValue());
+    }
+
+    @Test
+    public void testInjectionOverride() throws IOException {
+        // Create a MockWebServer. These are lean enough that you can create a new
+        // instance for every unit test.
+        MockWebServer server = new MockWebServer();
+
+        String mockJson = TestUtils.getJson("facebook_page");
+        server.enqueue(new MockResponse().setBody(mockJson));
+        server.play();
+
+        RoboGuice.overrideApplicationInjector(mApplication, new MyTestModule(server.getPort()));
 
         getActivity();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        RoboGuice.util.reset();
-    }
-
-    public void testInjectionOverride() {
-        String mockJson = TestUtils.getJson("facebook_page");
-        FacebookPage page = new Gson().fromJson(mockJson, FacebookPage.class);
-        when(mockRestClient.getPage(anyString())).thenReturn(page);
-
         onView(withId(R.id.testLambda)).perform(click());
         onView(withId(R.id.preview)).check(matches(withText("about")));
     }
 
-    public class MyTestModule extends AbstractModule {
+    private static class MyTestModule extends AbstractModule {
+        private final int mPort;
+
+        public MyTestModule(int port) {
+            mPort = port;
+        }
+
         @Override
         protected void configure() {
-            bind(FacebookPageRestClient.class).toInstance(mockRestClient);
+            RestAdapter restAdapter = new RestAdapter.Builder()
+                    .setEndpoint("http://localhost:" + mPort)
+                    .build();
+            bind(RestAdapter.class).toInstance(restAdapter);
         }
     }
 }

@@ -1,74 +1,60 @@
 package mottimotti.com.sandbox_v8_android;
 
-import android.app.Activity;
+import android.os.Bundle;
 import android.view.Window;
 import android.widget.TextView;
 
 import com.google.inject.Inject;
-import com.octo.android.robospice.SpiceManager;
-import com.octo.android.robospice.persistence.exception.SpiceException;
-import com.octo.android.robospice.request.listener.RequestListener;
 
-import org.androidannotations.annotations.Bean;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
-import org.androidannotations.annotations.RoboGuice;
 import org.androidannotations.annotations.ViewById;
 import org.androidannotations.annotations.WindowFeature;
 
-import mottimotti.com.sandbox_v8_android.network.MySpiceService;
-import mottimotti.com.sandbox_v8_android.network.request.FacebookPageRequest;
-import mottimotti.com.sandbox_v8_android.network.response.FacebookPage;
+import mottimotti.com.sandbox_v8_android.response.FacebookPage;
+import mottimotti.com.sandbox_v8_android.retrofit.FacebookService;
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import roboguice.activity.RoboActivity;
 
-@EActivity(resName = "activity_my")
+@EActivity(R.layout.activity_my)
 @OptionsMenu(R.menu.my)
 @WindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
-@RoboGuice
-public class MyActivity extends Activity implements RequestListener<FacebookPage> {
-    private SpiceManager spiceManager = new SpiceManager(MySpiceService.class);
+public class MyActivity extends RoboActivity implements Callback<FacebookPage> {
     @Inject
     NotifyHelper notifyHelper;
+    @Inject
+    RestAdapter restAdapter;
     @ViewById
     TextView preview;
-    @Inject
-    @Bean
-    FacebookPageRequest request;
+
+    private FacebookService mService;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mService = restAdapter.create(FacebookService.class);
+    }
 
     @Click
     final void testLambda() {
         setProgressBarIndeterminateVisibility(true);
         notifyHelper.notify("Sending request");
-        request.setPageName("Goyello");
-        spiceManager.execute(request, this);
-    }
-
-    @OptionsItem(R.id.action_settings)
-    final void openSettings() {
+        mService.getPage("Goyello", this);
     }
 
     @Override
-    public void onStart() {
-        spiceManager.start(this);
-        super.onStart();
-    }
-
-    @Override
-    public void onStop() {
-        spiceManager.shouldStop();
-        super.onStop();
-    }
-
-    @Override
-    public void onRequestFailure(SpiceException spiceException) {
-        setProgressBarIndeterminateVisibility(false);
-        notifyHelper.notify(spiceException.getMessage());
-    }
-
-    @Override
-    public void onRequestSuccess(FacebookPage facebookPage) {
+    public void success(FacebookPage facebookPage, Response response) {
         setProgressBarIndeterminateVisibility(false);
         preview.setText(facebookPage.getAbout());
+    }
+
+    @Override
+    public void failure(RetrofitError error) {
+        setProgressBarIndeterminateVisibility(false);
+        notifyHelper.notify(error.getMessage());
     }
 }

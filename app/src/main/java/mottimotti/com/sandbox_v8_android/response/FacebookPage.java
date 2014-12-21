@@ -1,4 +1,4 @@
-package mottimotti.com.sandbox_v8_android.network.response;
+package mottimotti.com.sandbox_v8_android.response;
 
 public class FacebookPage {
     private String name;
