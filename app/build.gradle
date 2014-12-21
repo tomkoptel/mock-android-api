@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
+apply plugin: 'me.champeau.gradle.groovy-android'
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_BUILD_SDK_VERSION)
@@ -32,6 +33,13 @@ android {
     }
 }
 
+project.androidGroovy {
+    options {
+        sourceCompatibility = '1.7'
+        targetCompatibility = '1.7'
+    }
+}
+
 apt {
     arguments {
         androidManifestFile variant.outputs[0].processResources.manifestFile
@@ -40,6 +48,7 @@ apt {
 }
 
 dependencies {
+    compile 'org.codehaus.groovy:groovy:2.4.0-beta-3:grooid'
     compile 'org.roboguice:roboguice:3.0.1'
     provided 'org.roboguice:roboblender:3.0.1'
 
@@ -52,7 +61,11 @@ dependencies {
     androidTestCompile 'com.android.support.test:testing-support-lib:0.1'
 
     androidTestCompile 'com.google.code.gson:gson:2.3'
-    androidTestCompile 'com.squareup.okhttp:okhttp:2.1.0'
-    androidTestCompile 'com.squareup.okhttp:okhttp-urlconnection:2.1.0'
-    androidTestCompile 'com.squareup.okhttp:mockwebserver:2.1.0'
+//    androidTestCompile 'com.squareup.okhttp:okhttp:2.1.0'
+//    androidTestCompile 'com.squareup.okhttp:okhttp-urlconnection:2.1.0'
+//    androidTestCompile 'com.squareup.okhttp:mockwebserver:2.1.0'
+
+    androidTestCompile('co.freeside:betamax:1.1.2') {
+        exclude group: "junit"
+    }
 }

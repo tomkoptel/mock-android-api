@@ -6,16 +6,17 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.ActivityInstrumentationTestCase2;
 
 import com.google.inject.AbstractModule;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
+import co.freeside.betamax.Betamax;
+import co.freeside.betamax.Recorder;
 import mottimotti.com.sandbox_v8_android.MyActivity_;
 import mottimotti.com.sandbox_v8_android.R;
 import retrofit.RestAdapter;
@@ -37,6 +38,8 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
     public ApplicationTest() {
         super(MyActivity_.class);
     }
+    @Rule
+    public Recorder recorder = new Recorder();
 
     @Before
     public void setUp() throws Exception {
@@ -60,17 +63,18 @@ public class ApplicationTest extends ActivityInstrumentationTestCase2<MyActivity
         assertThat(getInstrumentation(), notNullValue());
     }
 
+    @Betamax(tape="my tape")
     @Test
     public void testInjectionOverride() throws IOException {
         // Create a MockWebServer. These are lean enough that you can create a new
         // instance for every unit test.
-        MockWebServer server = new MockWebServer();
-
-        String mockJson = TestUtils.getJson("facebook_page");
-        server.enqueue(new MockResponse().setBody(mockJson));
-        server.play();
-
-        RoboGuice.overrideApplicationInjector(mApplication, new MyTestModule(server.getPort()));
+//        MockWebServer server = new MockWebServer();
+//
+//        String mockJson = TestUtils.getJson("facebook_page");
+//        server.enqueue(new MockResponse().setBody(mockJson));
+//        server.play();
+//
+//        RoboGuice.overrideApplicationInjector(mApplication, new MyTestModule(server.getPort()));
 
         getActivity();
         onView(withId(R.id.testLambda)).perform(click());
